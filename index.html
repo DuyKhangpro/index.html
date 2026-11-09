@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MultiChat</title>
+<style>
+:root{--bg:#f3f5f9;--panel:#fff;--side:#e9edf5;--ink:#172033;--mute:#6b7690;--line:#d9dfec;--user:#1f3a8a;--userink:#fff;--bot:#fff;--code:#eef1f8;--acc:#1f3a8a;--shadow:0 6px 24px rgba(23,32,51,.08)}
+[data-theme=dark]{--bg:#0f1420;--panel:#171e2e;--side:#121827;--ink:#e6eaf4;--mute:#8f9ab3;--line:#26304a;--user:#3b5bdb;--userink:#fff;--bot:#1b2336;--code:#0e1422;--acc:#7c94ff;--shadow:0 6px 24px rgba(0,0,0,.4)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);display:flex;overflow:hidden}
+button,select,textarea,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+aside{width:260px;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:16px;gap:8px;flex-shrink:0;transition:transform .2s,width .2s}
+.logo{font-size:22px;font-weight:700;letter-spacing:-.5px;padding:4px 8px 12px}
+.logo span{color:var(--acc)}
+.mini{display:none}
+#provs{flex-shrink:0}
+.prov{display:flex;align-items:center;gap:10px;width:100%;padding:11px 12px;border:1px solid transparent;border-radius:10px;background:transparent;text-align:left;font-weight:600}
+.prov:hover{background:var(--panel)}
+.prov.on{background:var(--panel);border-color:var(--line);box-shadow:var(--shadow)}
+.dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.prov small{margin-left:auto;font-weight:500;color:var(--mute);font-size:12px}
+.lh{font-size:13px;color:var(--mute);font-weight:600;padding:10px 10px 2px}
+#convs{min-height:0;overflow-y:auto;flex:0 1 auto}
+.cv{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:8px;font-size:14px;cursor:pointer}
+.cv:hover{background:var(--panel)}
+.cv.on{background:var(--panel);box-shadow:inset 0 0 0 1px var(--line);font-weight:600}
+.cv .ct{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cv .x{opacity:0;border:0;background:none;color:var(--mute);padding:0 4px;font-size:18px;line-height:1}
+.cv:hover .x,.cv:focus-within .x,.cv.on .x{opacity:1}
+.cv .x:hover{color:#d9534f}
+.none{padding:6px 10px;color:var(--mute);font-size:13px}
+.sp{flex:1 0 0}
+.sbtn{padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-weight:600}
+.sbtn:hover{border-color:var(--acc)}
+main{flex:1;display:flex;flex-direction:column;min-width:0;height:100%}
+header{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+#menu,#newc{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 11px;font-weight:600}
+#menu:hover,#newc:hover{border-color:var(--acc)}
+#title{font-weight:700;font-size:17px}
+.hr{margin-left:auto;display:flex;gap:8px;align-items:center;min-width:0}
+header select{padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);max-width:46vw;min-width:0}
+#log{flex:1;overflow-y:auto;padding:24px 20px;display:flex;flex-direction:column;gap:14px;scroll-behavior:smooth}
+.msg{max-width:min(760px,88%);padding:12px 16px;border-radius:16px;line-height:1.6;word-wrap:break-word;overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:var(--user);color:var(--userink);border-bottom-right-radius:4px;white-space:pre-wrap}
+.msg.bot{align-self:flex-start;background:var(--bot);border:1px solid var(--line);border-bottom-left-radius:4px}
+.msg.err{border-color:#d9534f;color:#d9534f}
+.msg pre{background:var(--code);padding:12px;border-radius:8px;overflow-x:auto;margin:8px 0}
+.msg code{font-family:ui-monospace,Consolas,monospace;font-size:13px;background:var(--code);padding:1px 5px;border-radius:4px}
+.msg pre code{padding:0;background:none}
+.who{font-size:12px;color:var(--mute);margin-bottom:4px;font-weight:600}
+.empty{margin:auto;text-align:center;color:var(--mute);max-width:360px;line-height:1.6}
+.empty b{display:block;color:var(--ink);font-size:20px;margin-bottom:6px}
+.empty button{margin-top:12px;padding:9px 16px;border-radius:10px;border:0;background:var(--acc);color:#fff;font-weight:600}
+.typing span{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:var(--mute);animation:b 1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
+@media(prefers-reduced-motion:reduce){.typing span{animation:none}#log{scroll-behavior:auto}aside{transition:none}}
+form{display:flex;gap:10px;padding:14px 20px 18px;background:var(--panel);border-top:1px solid var(--line)}
+textarea{flex:1;resize:none;max-height:180px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);line-height:1.5}
+#send{padding:0 20px;border:0;border-radius:12px;background:var(--acc);color:#fff;font-weight:700}
+#send:disabled{opacity:.5;cursor:not-allowed}
+.modal{position:fixed;inset:0;background:rgba(10,14,25,.55);display:none;align-items:center;justify-content:center;padding:16px;z-index:10}
+.modal.show{display:flex}
+.box{background:var(--panel);width:min(520px,100%);max-height:92vh;overflow-y:auto;border-radius:16px;padding:22px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.box h2{margin:0 0 4px;font-size:20px}
+.box h3{margin:20px 0 8px;font-size:15px}
+.hint{color:var(--mute);font-size:13px;margin:0 0 10px}
+.seg{display:flex;gap:8px}
+.seg button{flex:1;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:600}
+.seg button.on{border-color:var(--acc);box-shadow:inset 0 0 0 1px var(--acc);color:var(--acc)}
+.key{display:block;margin-bottom:10px;font-size:13px;font-weight:600}
+.key input{display:block;width:100%;margin-top:4px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:400}
+.row{display:flex;gap:10px;align-items:center;margin-top:16px}
+.row .grow{flex:1}
+.row button{padding:10px 18px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:600}
+.row .pri{background:var(--acc);border-color:var(--acc);color:#fff}
+#warn{color:#d9534f;display:none}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:.25s;z-index:20;font-weight:600}
+#toast.show{opacity:1;transform:translateX(-50%)}
+@media(min-width:761px){
+body.collapsed aside{width:68px;padding:16px 10px}
+body.collapsed .full,body.collapsed .nm,body.collapsed .prov small,body.collapsed .lbl,body.collapsed .lh,body.collapsed #convs{display:none}
+body.collapsed .mini{display:block}
+body.collapsed .logo{text-align:center;padding:4px 0 12px}
+body.collapsed .prov{justify-content:center;padding:11px 0}
+}
+@media(max-width:760px){
+aside{position:fixed;inset:0 auto 0 0;z-index:5;transform:translateX(-100%)}
+aside.open{transform:none;box-shadow:var(--shadow)}
+.msg{max-width:94%}
+.t{display:none}
+}
+</style>
+</head>
+<body>
+
+<aside id="side">
+  <div class="logo"><b class="full">Multi<span>Chat</span></b><b class="mini">M<span>C</span></b></div>
+  <div id="provs"></div>
+  <div class="lh">Cuộc trò chuyện</div>
+  <div id="convs"></div>
+  <div class="sp"></div>
+  <button class="sbtn" id="openSet" title="Cài đặt">⚙<span class="lbl"> Cài đặt</span></button>
+</aside>
+
+<main>
+  <header>
+    <button id="menu" aria-label="Thu gọn hoặc mở thanh bên" title="Thu gọn / mở thanh bên">☰</button>
+    <div id="title"></div>
+    <div class="hr">
+      <button id="newc" title="Cuộc trò chuyện mới">＋<span class="t"> Cuộc trò chuyện mới</span></button>
+      <select id="model" aria-label="Chọn model"></select>
+    </div>
+  </header>
+  <div id="log"></div>
+  <form id="form">
+    <textarea id="input" rows="1" placeholder="Nhập tin nhắn… (Enter để gửi, Shift+Enter xuống dòng)"></textarea>
+    <button id="send" type="submit">Gửi</button>
+  </form>
+</main>
+
+<div class="modal" id="modal">
+  <div class="box" role="dialog" aria-labelledby="mt">
+    <h2 id="mt">Cài đặt · Web</h2>
+    <h3>Giao diện</h3>
+    <div class="seg" id="themeSeg">
+      <button data-t="light">Sáng</button>
+      <button data-t="dark">Tối</button>
+    </div>
+    <h3>API Key</h3>
+    <p class="hint">Key tự động lưu trong trình duyệt ngay khi bạn nhập, F5 không bị mất. Key chỉ được gửi trực tiếp tới nhà cung cấp AI tương ứng.</p>
+    <p class="hint" id="warn">Trình duyệt đang chặn lưu dữ liệu nên key sẽ mất khi F5. Hãy mở file trực tiếp bằng Chrome, Edge hoặc Firefox (không mở trong cửa sổ xem trước).</p>
+    <div id="keys"></div>
+    <label class="hint"><input type="checkbox" id="show"> Hiện API key</label>
+    <div class="row">
+      <span class="grow"></span>
+      <button id="close">Đóng</button>
+      <button id="apply" class="pri">Áp dụng</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ====== DANH SÁCH MODEL — thêm model mới ở đây, mỗi model là 1 chuỗi ID ====== */
+const PROVIDERS = {
+  chatgpt: { name: "ChatGPT", color: "#10a37f", models: [ "gpt-6-luna","gpt-6.1-terra", "gpt-6.1-sol", "gpt-6-astra", "gpt-6-sol", "gpt-5.6-sol","gpt-5.6-terra","gpt-5.6-luna", "gpt-5.5-pro-2026-04-23", "gpt-5.2-pro-2025-12-11", "gpt-5.2-2025-12-11", "gpt-5.4-mini-2026-03-17", "gpt-5.4-pro-2026-03-05", "gpt-5.5-2026-04-23", "gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-4.1", "gpt-4o", "o4-mini"] },
+  claude:  { name: "Claude",  color: "#c96442", models: [ "claude-fable-5-1", "claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5", "claude-sonnet-5-5", "claude-haiku-5-5", "claude-sonnet-4-6"] },
+  gemini:  { name: "Gemini",  color: "#4285f4", models: [ "gemini-4-argon", "gemini-3.8-flash", "gemini-3.6-flash","gemini-3.5-flash-lite","gemini-3.1-flash-lite","gemini-3-flash-preview"] },
+  grok:    { name: "Grok",    color: "#555a66", models: [ "grok-4.7", "grok-4", "grok-3", "grok-3-mini", "grok-code-fast-1"] },
+  groq:    { name: "Groq",    color: "#f55036", models: [ "whisper-large-v3-turbo", "whisper-large-v3", "openai/gpt-oss-safeguard-20b", "meta-llama/llama-prompt-guard-2-86m", "meta-llama/llama-prompt-guard-2-22m", "canopylabs/orpheus-v1-english", "canopylabs/orpheus-arabic-saudi", "qwen/qwen3.8-27b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant", "openai/gpt-oss-120b", "openai/gpt-oss-20b", "meta-llama/llama-4-scout-17b-16e-instruct", "qwen/qwen3-32b", "moonshotai/kimi-k2-instruct"] }
+};
+/* ============================================================================= */
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } },
+  set(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+};
+store.ok = (() => { try { localStorage.setItem("mc_t", "1"); localStorage.removeItem("mc_t"); return true; } catch(e){ return false; } })();
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const ids = Object.keys(PROVIDERS);
+const S = {
+  p: store.get("mc_p", "chatgpt"),
+  model: store.get("mc_model", {}),
+  convs: store.get("mc_convs", {}),
+  cur: store.get("mc_cur", {}),
+  keys: store.get("mc_keys", {}),
+  theme: store.get("mc_theme", "light"),
+  busy: false
+};
+if (!PROVIDERS[S.p]) S.p = ids[0];
+/* chuyển dữ liệu chat cũ (bản trước) sang dạng nhiều cuộc trò chuyện */
+const old = store.get("mc_chats", null);
+if (old){
+  ids.forEach(i => { if (Array.isArray(old[i]) && old[i].length && !(S.convs[i] || []).length) S.convs[i] = [{ id: uid(), title: String(old[i][0].content).slice(0, 40), msgs: old[i], t: Date.now() }]; });
+  store.set("mc_convs", S.convs); try { localStorage.removeItem("mc_chats"); } catch(e){}
+}
+ids.forEach(i => { if (!Array.isArray(S.convs[i])) S.convs[i] = []; });
+const getConv = p => S.convs[p].find(c => c.id === S.cur[p]) || null;
+const persist = () => { store.set("mc_convs", S.convs); store.set("mc_cur", S.cur); };
+
+function esc(t){ return t.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function md(t){
+  t = esc(t);
+  t = t.replace(/```\w*\n?([\s\S]*?)```/g, (_, c) => "<pre><code>" + c.replace(/\n$/,"") + "</code></pre>");
+  t = t.replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  t = t.replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>");
+  return t.replace(/\n/g, "<br>").replace(/(<pre><code>[\s\S]*?<\/code><\/pre>)/g, m => m.replace(/<br>/g, "\n"));
+}
+function toast(t){ const e = $("toast"); e.textContent = t; e.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove("show"), 1800); }
+
+function setTheme(t){
+  S.theme = t; document.documentElement.dataset.theme = t; store.set("mc_theme", t);
+  document.querySelectorAll("#themeSeg button").forEach(b => b.classList.toggle("on", b.dataset.t === t));
+}
+
+function renderProvs(){
+  $("provs").innerHTML = "";
+  ids.forEach(i => {
+    const b = document.createElement("button");
+    b.className = "prov" + (i === S.p ? " on" : "");
+    b.title = PROVIDERS[i].name;
+    b.innerHTML = '<span class="dot" style="background:' + PROVIDERS[i].color + '"></span><span class="nm">' + PROVIDERS[i].name + "</span>" + (S.keys[i] ? "" : "<small>chưa có key</small>");
+    b.onclick = () => { S.p = i; store.set("mc_p", i); $("side").classList.remove("open"); renderAll(); };
+    $("provs").appendChild(b);
+  });
+}
+function renderModels(){
+  const P = PROVIDERS[S.p], sel = $("model");
+  $("title").textContent = P.name;
+  sel.innerHTML = P.models.map(m => '<option value="' + m + '">' + m + "</option>").join("");
+  if (!P.models.includes(S.model[S.p])) S.model[S.p] = P.models[0];
+  sel.value = S.model[S.p];
+}
+function renderConvs(){
+  const box = $("convs"), list = [...S.convs[S.p]].sort((a, b) => b.t - a.t);
+  box.innerHTML = list.length ? "" : '<div class="none">Chưa có cuộc trò chuyện nào.</div>';
+  list.forEach(c => {
+    const d = document.createElement("div");
+    d.className = "cv" + (c.id === S.cur[S.p] ? " on" : "");
+    d.tabIndex = 0; d.setAttribute("role", "button");
+    d.innerHTML = '<span class="ct"></span><button class="x" aria-label="Xóa cuộc trò chuyện" title="Xóa">×</button>';
+    d.querySelector(".ct").textContent = c.title; d.title = c.title;
+    const open = () => { S.cur[S.p] = c.id; persist(); $("side").classList.remove("open"); renderConvs(); renderLog(); };
+    d.onclick = open;
+    d.onkeydown = e => { if (e.target === d && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); open(); } };
+    d.querySelector(".x").onclick = e => {
+      e.stopPropagation();
+      if (!confirm("Xóa cuộc trò chuyện này?")) return;
+      S.convs[S.p] = S.convs[S.p].filter(x => x.id !== c.id);
+      if (S.cur[S.p] === c.id) S.cur[S.p] = null;
+      persist(); renderConvs(); renderLog();
+    };
+    box.appendChild(d);
+  });
+}
+function bubble(role, html, cls){
+  const d = document.createElement("div");
+  d.className = "msg " + role + (cls ? " " + cls : "");
+  if (role === "bot") d.innerHTML = '<div class="who">' + PROVIDERS[S.p].name + "</div>" + html; else d.textContent = html;
+  $("log").appendChild(d); $("log").scrollTop = $("log").scrollHeight; return d;
+}
+function renderLog(){
+  const log = $("log"); log.innerHTML = "";
+  const conv = getConv(S.p), chat = conv ? conv.msgs : [];
+  if (!chat.length){
+    const noKey = !S.keys[S.p];
+    log.innerHTML = '<div class="empty"><b>Trò chuyện với ' + PROVIDERS[S.p].name + "</b>" +
+      (noKey ? "Bạn cần nhập API key của " + PROVIDERS[S.p].name + " trước khi bắt đầu.<br><button id='goSet'>Nhập API key</button>" : "Chọn model ở góc trên bên phải rồi gõ tin nhắn bên dưới.") + "</div>";
+    if (noKey) $("goSet").onclick = openSet;
+    return;
+  }
+  chat.forEach(m => m.role === "user" ? bubble("user", m.content) : bubble("bot", md(m.content), m.err ? "err" : ""));
+}
+function renderAll(){ renderProvs(); renderModels(); renderConvs(); renderLog(); }
+
+const URLS = { chatgpt: "https://api.openai.com/v1/chat/completions", grok: "https://api.x.ai/v1/chat/completions", groq: "https://api.groq.com/openai/v1/chat/completions" };
+async function callAPI(p, model, msgs, key){
+  let url, opt, pick;
+  const ok = msgs.filter(m => !m.err).map(m => ({ role: m.role, content: m.content }));
+  if (URLS[p]){
+    url = URLS[p];
+    opt = { headers: { "Content-Type": "application/json", Authorization: "Bearer " + key }, body: { model, messages: ok } };
+    pick = j => j.choices[0].message.content;
+  } else if (p === "claude"){
+    url = "https://api.anthropic.com/v1/messages";
+    opt = { headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" }, body: { model, max_tokens: 4096, messages: ok } };
+    pick = j => j.content.map(c => c.text || "").join("");
+  } else {
+    url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
+    opt = { headers: { "Content-Type": "application/json", "x-goog-api-key": key }, body: { contents: ok.map(m => ({ role: m.role === "user" ? "user" : "model", parts: [{ text: m.content }] })) } };
+    pick = j => j.candidates[0].content.parts.map(x => x.text || "").join("");
+  }
+  const r = await fetch(url, { method: "POST", headers: opt.headers, body: JSON.stringify(opt.body) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error((j.error && (j.error.message || j.error)) || ("Lỗi " + r.status));
+  return pick(j) || "(Model không trả về nội dung)";
+}
+
+async function send(){
+  const ta = $("input"), text = ta.value.trim();
+  if (!text || S.busy) return;
+  const p = S.p, key = S.keys[p];
+  if (!key){ toast("Hãy nhập API key của " + PROVIDERS[p].name); openSet(); return; }
+  let conv = getConv(p);
+  if (!conv){
+    conv = { id: uid(), title: text.length > 40 ? text.slice(0, 40) + "…" : text, msgs: [], t: Date.now() };
+    S.convs[p].unshift(conv); S.cur[p] = conv.id;
+  }
+  conv.msgs.push({ role: "user", content: text }); conv.t = Date.now();
+  ta.value = ""; ta.style.height = "auto";
+  if (conv.msgs.length === 1) $("log").innerHTML = "";
+  bubble("user", text);
+  const wait = bubble("bot", '<span class="typing"><span></span><span></span><span></span></span>');
+  S.busy = true; $("send").disabled = true; persist(); renderConvs();
+  let out, isErr = false;
+  try {
+    out = await callAPI(p, S.model[p], conv.msgs, key);
+  } catch (e){
+    isErr = true;
+    out = "Lỗi: " + (e.message === "Failed to fetch" ? "Không kết nối được. Kiểm tra mạng, API key, hoặc nhà cung cấp chặn truy cập từ trình duyệt." : String(e.message));
+  }
+  conv.msgs.push(isErr ? { role: "assistant", content: out, err: true } : { role: "assistant", content: out });
+  wait.remove();
+  if (S.p === p && S.cur[p] === conv.id) bubble("bot", md(out), isErr ? "err" : "");
+  S.busy = false; $("send").disabled = false;
+  persist(); ta.focus();
+}
+
+function openSet(){
+  ids.forEach(i => { $("k_" + i).value = S.keys[i] || ""; });
+  $("warn").style.display = store.ok ? "none" : "block";
+  setTheme(S.theme); $("modal").classList.add("show");
+}
+function closeSet(){ $("modal").classList.remove("show"); renderAll(); }
+
+$("keys").innerHTML = ids.map(i => '<label class="key">' + PROVIDERS[i].name + ' API key<input type="password" id="k_' + i + '" placeholder="Dán API key của ' + PROVIDERS[i].name + '" autocomplete="off" spellcheck="false"></label>').join("");
+ids.forEach(i => $("k_" + i).addEventListener("input", () => {
+  const v = $("k_" + i).value.trim();
+  if (v) S.keys[i] = v; else delete S.keys[i];
+  store.set("mc_keys", S.keys);
+}));
+$("show").onchange = e => ids.forEach(i => { $("k_" + i).type = e.target.checked ? "text" : "password"; });
+document.querySelectorAll("#themeSeg button").forEach(b => b.onclick = () => setTheme(b.dataset.t));
+$("apply").onclick = () => { store.set("mc_keys", S.keys); closeSet(); toast("Đã lưu cài đặt"); };
+$("close").onclick = closeSet;
+$("openSet").onclick = openSet;
+$("modal").onclick = e => { if (e.target.id === "modal") closeSet(); };
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("modal").classList.contains("show")) closeSet(); });
+$("model").onchange = e => { S.model[S.p] = e.target.value; store.set("mc_model", S.model); };
+$("newc").onclick = () => { S.cur[S.p] = null; persist(); renderConvs(); renderLog(); $("input").focus(); };
+$("menu").onclick = e => {
+  e.stopPropagation();
+  if (matchMedia("(max-width:760px)").matches) $("side").classList.toggle("open");
+  else store.set("mc_col", document.body.classList.toggle("collapsed"));
+};
+document.querySelector("main").addEventListener("click", () => $("side").classList.remove("open"));
+$("form").onsubmit = e => { e.preventDefault(); send(); };
+$("input").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing){ e.preventDefault(); send(); } });
+$("input").addEventListener("input", e => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 180) + "px"; });
+
+if (store.get("mc_col", false)) document.body.classList.add("collapsed");
+setTheme(S.theme);
+renderAll();
+</script>
+</body>
+</html>
